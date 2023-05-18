@@ -31,18 +31,40 @@ async function run() {
 
     const toysCollections = client.db("toyCarsDB").collection("toys");
 
+
+    app.post("/toys", async(req,res)=>{
+      const toy = req.body;
+      const result = await toysCollections.insertOne(toy);
+      res.send(result);
+    });
+
+    app.get("/toys", async(req,res)=>{
+
+      let query ={};
+
+      if(req.query?.email){
+        query = {sellerEmail: req.query.email}
+      }
+      const result = await toysCollections.find(query).toArray();
+      res.send(result);
+      
+    })
+
     app.get("/toys", async(req,res)=>{
       const toys = await toysCollections.find().toArray();
       res.send(toys);
-    })
+    });
 
     app.get("/toys/:id", async(req,res)=>{
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await toysCollections.findOne(query);
       res.send(result);
-    })
+    });
 
+    
+
+    
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
