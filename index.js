@@ -5,12 +5,9 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require("dotenv").config();
 const port = process.env.PORT || 5000;
 
-
 // middle ware:
 app.use(cors());
 app.use(express.json());
-
-
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.zyyhzcl.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -28,16 +25,17 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
-
+    // toys collection
     const toysCollections = client.db("toyCarsDB").collection("toys");
 
-
+    // adding toy
     app.post("/toys", async(req,res)=>{
       const toy = req.body;
       const result = await toysCollections.insertOne(toy);
       res.send(result);
     });
 
+    // geting toys info by using query(toys based on user)
     app.get("/toys", async(req,res)=>{
 
       let query ={};
@@ -50,11 +48,13 @@ async function run() {
       
     })
 
+    // geting all toy
     app.get("/toys", async(req,res)=>{
       const toys = await toysCollections.find().toArray();
       res.send(toys);
     });
 
+    // getting single toy 
     app.get("/toys/:id", async(req,res)=>{
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -62,6 +62,7 @@ async function run() {
       res.send(result);
     });
 
+    // deleting single toy
     app.delete("/toys/:id", async(req,res)=>{
       const id = req.params.id;
       const query = {_id: new ObjectId(id)};
@@ -69,11 +70,30 @@ async function run() {
       res.send(result);
     })
 
-    
+    // updating single toy
+    app.put("/toys/:id", async(req,res)=>{
+      const id = req.params.id;
+      const toy = req.body;
+      const filter = {_id: new ObjectId(id)};
+
+      const updatedToy = {
+        $set:{
+          price: toy.price,
+          rating: toy.rating,
+          availableQuantity: toy.availableQuantity,
+          description: toy.description,
+        }
+      }
+
+      const result = await toysCollections.updateOne(filter, updatedToy);
+      res.send(result);
+
+    })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
+
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
