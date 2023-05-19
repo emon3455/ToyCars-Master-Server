@@ -28,56 +28,67 @@ async function run() {
     // toys collection
     const toysCollections = client.db("toyCarsDB").collection("toys");
 
+    const result = await toysCollections.createIndex({ toyName: 1 });
+    console.log(result);
+
+
     // adding toy
-    app.post("/toys", async(req,res)=>{
+    app.post("/toys", async (req, res) => {
       const toy = req.body;
       const result = await toysCollections.insertOne(toy);
       res.send(result);
     });
 
-    // geting toys info by using query(toys based on user)
-    app.get("/toys", async(req,res)=>{
-
-      let query ={};
-
-      if(req.query?.email){
-        query = {sellerEmail: req.query.email}
-      }
-      const result = await toysCollections.find(query).toArray();
-      res.send(result);
-      
-    })
-
     // geting all toy
-    app.get("/toys", async(req,res)=>{
+    app.get("/toys", async (req, res) => {
       const toys = await toysCollections.find().toArray();
       res.send(toys);
     });
 
+    // geting toys info by using query(toys based on user)
+    app.get("/specificToys", async (req, res) => {
+
+      let query = {};
+
+      if (req.query?.email) {
+        query = { sellerEmail: req.query.email }
+      }
+      const result = await toysCollections.find(query).toArray();
+      res.send(result);
+
+    });
+
     // getting single toy 
-    app.get("/toys/:id", async(req,res)=>{
+    app.get("/toys/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await toysCollections.findOne(query);
       res.send(result);
     });
 
+    // geting search value;
+    app.get("/toySearch/:text", async (req, res) => {
+      const text = req.params.text;
+      const result = await toysCollections.find({ toyName: { $regex: text, $options: "i" } }).toArray();
+      res.send(result);
+    })
+
     // deleting single toy
-    app.delete("/toys/:id", async(req,res)=>{
+    app.delete("/toys/:id", async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)};
+      const query = { _id: new ObjectId(id) };
       const result = await toysCollections.deleteOne(query);
       res.send(result);
     })
 
     // updating single toy
-    app.put("/toys/:id", async(req,res)=>{
+    app.put("/toys/:id", async (req, res) => {
       const id = req.params.id;
       const toy = req.body;
-      const filter = {_id: new ObjectId(id)};
+      const filter = { _id: new ObjectId(id) };
 
       const updatedToy = {
-        $set:{
+        $set: {
           price: toy.price,
           rating: toy.rating,
           availableQuantity: toy.availableQuantity,
@@ -89,6 +100,8 @@ async function run() {
       res.send(result);
 
     })
+
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
@@ -103,11 +116,11 @@ run().catch(console.dir);
 
 
 
-app.get("/", (req,res)=>{
-    res.send("car-toys-master is running...");
+app.get("/", (req, res) => {
+  res.send("car-toys-master is running...");
 })
 
 
-app.listen(port, (req,res)=>{
-    console.log(`simple crud API is running on port: ${port}`);
+app.listen(port, (req, res) => {
+  console.log(`simple crud API is running on port: ${port}`);
 })
