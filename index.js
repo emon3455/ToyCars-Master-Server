@@ -34,10 +34,11 @@ async function run() {
 
     // geting all toy
     app.get("/toys", async (req, res) => {
-      const toys = await toysCollections.find().sort({price: 1}).toArray();
+      const toys = await toysCollections.find().toArray();
       res.send(toys);
     });
 
+    // getting specific user toys and also sort them in ascending and descending order
     app.get("/specificToys", async (req, res) => {
       let query = {};
     
