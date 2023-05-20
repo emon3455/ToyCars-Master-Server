@@ -22,14 +22,9 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
 
     // toys collection
     const toysCollections = client.db("toyCarsDB").collection("toys");
-
-    // index for search by toy name
-    const result = await toysCollections.createIndex({ toyName: 1 });
 
 
     // geting all toy
@@ -65,10 +60,11 @@ async function run() {
       res.send(result);
     });
 
-    // geting search value;
-    app.get("/toySearch/:text", async (req, res) => {
+    // searching by name
+    app.get("/toySearch/:text", async(req,res)=>{
       const text = req.params.text;
-      const result = await toysCollections.find({ toyName: { $regex: text, $options: "i" } }).toArray();
+      const allToy = await toysCollections.find().toArray();
+      const result = allToy.filter(ty => ty.toyName.toLowerCase().includes(text.toLowerCase()));
       res.send(result);
     })
 
@@ -107,11 +103,6 @@ async function run() {
 
     })
 
-
-
-    // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
   } finally {
     // Ensures that the client will close when you finish/error
