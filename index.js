@@ -28,34 +28,32 @@ async function run() {
     // toys collection
     const toysCollections = client.db("toyCarsDB").collection("toys");
 
+    // index for search by toy name
     const result = await toysCollections.createIndex({ toyName: 1 });
-    console.log(result);
 
-
-    // adding toy
-    app.post("/toys", async (req, res) => {
-      const toy = req.body;
-      const result = await toysCollections.insertOne(toy);
-      res.send(result);
-    });
 
     // geting all toy
     app.get("/toys", async (req, res) => {
-      const toys = await toysCollections.find().toArray();
+      const toys = await toysCollections.find().sort({price: 1}).toArray();
       res.send(toys);
     });
 
-    // geting toys info by using query(toys based on user)
     app.get("/specificToys", async (req, res) => {
-
       let query = {};
-
+    
       if (req.query?.email) {
-        query = { sellerEmail: req.query.email }
+        query = { sellerEmail: req.query.email };
       }
-      const result = await toysCollections.find(query).toArray();
+    
+      let result = await toysCollections.find(query).toArray();
+    
+      if (req.query?.sort === 'desc') {
+        result.sort((a, b) => b.price - a.price); // Sort in descending order based on price
+      } else {
+        result.sort((a, b) => a.price - b.price); // Sort in ascending order based on price
+      }
+    
       res.send(result);
-
     });
 
     // getting single toy 
@@ -72,6 +70,13 @@ async function run() {
       const result = await toysCollections.find({ toyName: { $regex: text, $options: "i" } }).toArray();
       res.send(result);
     })
+
+    // adding toy
+    app.post("/toys", async (req, res) => {
+      const toy = req.body;
+      const result = await toysCollections.insertOne(toy);
+      res.send(result);
+    });
 
     // deleting single toy
     app.delete("/toys/:id", async (req, res) => {
